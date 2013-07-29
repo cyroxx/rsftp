@@ -4,18 +4,20 @@ import os
 from twisted.cred import checkers
 from twisted.internet import defer
 from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell, FileNotFoundError, errnoToFailure
+from twisted.python import filepath
 
 import treq
 
 import client
 
+BASE_URI = 'https://heahdk.net/storage/cyroxx/public/'
 
 class MyFTPRealm(FTPRealm):
     def requestAvatar(self, avatarId, mind, *interfaces):
         for iface in interfaces:
             if iface is IFTPShell:
 #                if avatarId is checkers.ANONYMOUS:
-                avatar = MyFTPShell(self.anonymousRoot)
+                avatar = MyFTPShell(filepath.FilePath('/'))
 #                else:
                 #avatar = MyFTPShell(self.getHomeDirectory(avatarId))
                 return (IFTPShell, avatar,
@@ -37,26 +39,7 @@ class MyFTPShell(FTPShell):
         @type keys: C{list} of C{str}
         """
         filePath = self._path(path)
-        if filePath.isdir():
-            entries = filePath.listdir()
-            fileEntries = [filePath.child(p) for p in entries]
-        elif filePath.isfile():
-            entries = [os.path.join(*filePath.segmentsFrom(self.filesystemRoot))]
-            fileEntries = [filePath]
-        else:
-            return defer.fail(FileNotFoundError(path))
-
-        results = []
-        for fileName, filePath in zip(entries, fileEntries):
-            ent = []
-            results.append((fileName, ent))
-            if keys:
-                try:
-                    ent.extend(self._statNode(filePath, keys))
-                except (IOError, OSError), e:
-                    return errnoToFailure(e.errno, fileName)
-                except:
-                    return defer.fail()
+        print type(filePath), filePath
         
         def parse_results(json):
             results = []
@@ -80,8 +63,8 @@ class MyFTPShell(FTPShell):
             return results
             
         
-        uri ='https://heahdk.net/storage/cyroxx/public/'
-
+        
+        uri = BASE_URI
         d = treq.get(uri)
         d.addCallback(treq.json_content)
         d.addCallback(parse_results)
