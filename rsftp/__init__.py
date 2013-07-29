@@ -36,7 +36,6 @@ class MyFTPShell(FTPShell):
         @param keys: the list of desired metadata
         @type keys: C{list} of C{str}
         """
-#        print path, keys
         filePath = self._path(path)
         if filePath.isdir():
             entries = filePath.listdir()
@@ -60,17 +59,22 @@ class MyFTPShell(FTPShell):
                     return defer.fail()
         
         def parse_results(json):
-            dir_meta  = [0L, True, 16895, 0, 1374426641.523584, '0', '0']
-            file_meta = [2139L, False, 33206, 0, 1375043497.990811, '0', '0']
-            
             results = []
             for key, value in json.iteritems():
                 is_directory = key.endswith('/')
                 current_version = value
                 
-                print '%s\t%s\t%s' % (('D' if is_directory else ' '), key, current_version)
+                md = {
+                      'size': 0L if is_directory else 2139L,
+                      'directory': is_directory,
+                      'permissions': 16895 if is_directory else 33206,
+                      'hardlinks': 0,
+                      # FIXME: we assume unreasonably that current_version is a numeric timestamp
+                      'modified': current_version/1000,
+                      'owner': '0',
+                      'group': '0'}
                 
-                meta = dir_meta if is_directory else file_meta
+                meta = [md[k] for k in keys]
                 results.append( (key, meta) )
             
             return results
