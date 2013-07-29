@@ -5,6 +5,8 @@ from twisted.cred import checkers
 from twisted.internet import defer
 from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell, FileNotFoundError, errnoToFailure
 
+import treq
+
 import client
 
 
@@ -56,19 +58,31 @@ class MyFTPShell(FTPShell):
                     return errnoToFailure(e.errno, fileName)
                 except:
                     return defer.fail()
-#        results = [('test', [])]
-        results = [
-                   ('test', [0L, True, 16895, 0, 1374426641.523584, '0', '0']),
-                   ('tkkg.txt', [2139L, False, 33206, 0, 1375043497.990811, '0', '0']),
-        ]
         
-        def pkkk(response):
-            print 'kkk', response
+        def parse_results(json):
+            dir_meta  = [0L, True, 16895, 0, 1374426641.523584, '0', '0']
+            file_meta = [2139L, False, 33206, 0, 1375043497.990811, '0', '0']
             
-        client.ask().addCallback(pkkk)
-        #print results
+            results = []
+            for key, value in json.iteritems():
+                is_directory = key.endswith('/')
+                current_version = value
+                
+                print '%s\t%s\t%s' % (('D' if is_directory else ' '), key, current_version)
+                
+                meta = dir_meta if is_directory else file_meta
+                results.append( (key, meta) )
+            
+            return results
+            
+        
+        uri ='https://heahdk.net/storage/cyroxx/public/'
 
-        return defer.succeed(results)
+        d = treq.get(uri)
+        d.addCallback(treq.json_content)
+        d.addCallback(parse_results)
+
+        return d
     
     def access(self, path):
         #print path
