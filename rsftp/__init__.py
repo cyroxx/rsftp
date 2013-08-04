@@ -4,7 +4,7 @@ import os
 from twisted.cred import checkers
 from twisted.internet import defer
 from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell
-from twisted.protocols import ftp
+from twisted.protocols import basic, ftp
 from twisted.python.filepath import IFilePath, AbstractFilePath
 from twisted.python.compat import comparable
 
@@ -12,6 +12,7 @@ import treq
 
 import rs
 from rs.filepath import NotFoundError, PermissionDeniedError
+from StringIO import StringIO
 
 #BASE_URI, ACCESS_TOKEN = 'https://heahdk.net/storage/cyroxx/public/', ''
 BASE_URI, ACCESS_TOKEN = 'https://storage.5apps.com/cyroxx/public/', '6fe3cc8cdcce54de41f24c8886d6d8b1'
@@ -29,6 +30,25 @@ class MyFTPRealm(FTPRealm):
         raise NotImplementedError(
             "Only IFTPShell interface is supported by this realm")
         
+
+class _RSFileReader(object):
+    #implements(IReadFile)
+
+    def __init__(self, fObj):
+        self.fObj = fObj
+        self._send = False
+
+    def _close(self, passthrough):
+        self._send = True
+        self.fObj.close()
+        return passthrough
+
+    def send(self, consumer):
+        assert not self._send, "Can only call IReadFile.send *once* per instance"
+        self._send = True
+        d = basic.FileSender().beginFileTransfer(self.fObj, consumer)
+        d.addBoth(self._close)
+        return d
 
 class MyFTPShell(object):
     
@@ -75,12 +95,19 @@ class MyFTPShell(object):
         # 2. do we have the permission to access?
 
         def ebPath(failure):
-            print "[rsftp71] ", path
+#            print "[rsftp71] ", path
             raise ftp.FileNotFoundError(path)
         
         d.addErrback(ebPath)
         
         return d
+    
+    def openForReading(self, path):
+        # 1. check whether the path exists
+        # 2. check whether we may open it (should be the case in RS)
+        # 3. open it
+        f = StringIO('Hello World!')
+        return defer.succeed(_RSFileReader(f))
     
     def rename(self, fromPath, toPath):
         # Not really implemented yet, so deny
