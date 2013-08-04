@@ -216,15 +216,21 @@ class RSFilePath(object):
             childinfo = {}
             for key, value in json.iteritems():
                 is_directory = key.endswith('/')
-                current_version = value
+                current_version = value                
+                
+                # try to use <current_version> info as the modified timestamp
+                if isinstance( current_version, ( int, long ) ):
+                    modified = current_version / 1000
+                else:
+                    modified = 0
                 
                 md = {
-                      'size': 0L if is_directory else 2139L,
+                      'size': 0L,
                       'directory': is_directory,
                       'permissions': 16895 if is_directory else 33206,
                       'hardlinks': 0,
                       # FIXME: we assume unreasonably that current_version is a numeric timestamp
-                      'modified': current_version/1000,
+                      'modified': modified,
                       'owner': '0',
                       'group': '0'}
                 

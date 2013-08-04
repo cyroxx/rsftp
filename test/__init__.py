@@ -19,6 +19,15 @@ list_response = """
 }
 """
 
+list_response_non_numeric = """
+{
+
+    "pictures/": "foobarbaz",
+    "test.txt": "bozbangbol"
+
+}
+"""
+
 class FakeResponse(object):
     
     code = 200
@@ -38,6 +47,10 @@ class FakeResponse(object):
 
 def mock_get(uri):
     response = FakeResponse(list_response)
+    return defer.succeed(response)
+
+def fakeListResponseNonNumeric(uri):
+    response = FakeResponse(list_response_non_numeric)
     return defer.succeed(response)
 
 def fakeGet404(uri):
@@ -89,3 +102,17 @@ class RSFilePathTestCase(TestCase):
         d = self.test.child(name)
         
         return self.assertFailure(d, rs.filepath.NotFoundError)
+    
+    def test_listNonNumericVersionNumber(self):
+        self.patch(treq, 'get', fakeListResponseNonNumeric)
+        
+        keys = ('size', 'directory', 'permissions', 'hardlinks', 'modified', 'owner', 'group')
+        d = self.test.ftp_list(keys)
+        
+        def cbList(results):
+            print results[0][1][4]
+            
+        
+        d.addCallback(cbList)
+        
+        return d
