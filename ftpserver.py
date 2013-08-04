@@ -5,7 +5,7 @@
 An example FTP server with minimal user authentication.
 """
 
-from rsftp import MyFTPRealm
+from rsftp import RSFTPRealm
 from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
@@ -38,7 +38,7 @@ from twisted.protocols.ftp import FTPFactory
 #   grimmtooth:bozo2
 # =====================
 #
-p = Portal(MyFTPRealm('./'),
+p = Portal(RSFTPRealm('./'),
            [AllowAnonymousAccess(), FilePasswordDB("pass.dat")])
 
 #

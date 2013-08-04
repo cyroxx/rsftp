@@ -17,14 +17,14 @@ from StringIO import StringIO
 #BASE_URI, ACCESS_TOKEN = 'https://heahdk.net/storage/cyroxx/public/', ''
 BASE_URI, ACCESS_TOKEN = 'https://storage.5apps.com/cyroxx/public/', '6fe3cc8cdcce54de41f24c8886d6d8b1'
 
-class MyFTPRealm(FTPRealm):
+class RSFTPRealm(FTPRealm):
     def requestAvatar(self, avatarId, mind, *interfaces):
         for iface in interfaces:
             if iface is IFTPShell:
 #                if avatarId is checkers.ANONYMOUS:
-                avatar = MyFTPShell( rs.RSFilePath(BASE_URI, ACCESS_TOKEN) )
+                avatar = RSFTPShell( rs.RSFilePath(BASE_URI, ACCESS_TOKEN) )
 #                else:
-                #avatar = MyFTPShell(self.getHomeDirectory(avatarId))
+                #avatar = RSFTPShell(self.getHomeDirectory(avatarId))
                 return (IFTPShell, avatar,
                         getattr(avatar, 'logout', lambda: None))
         raise NotImplementedError(
@@ -50,7 +50,7 @@ class _RSFileReader(object):
         d.addBoth(self._close)
         return d
 
-class MyFTPShell(object):
+class RSFTPShell(object):
     
     def __init__(self, filesystemRoot):
         self.filesystemRoot = filesystemRoot
