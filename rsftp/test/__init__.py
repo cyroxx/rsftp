@@ -1,11 +1,8 @@
 from twisted.internet import defer
-from twisted.web._newclient import Response
 from twisted.web._newclient import ResponseDone
 from twisted.python.failure import Failure
-from twisted.web import http_headers
 
 from twisted.trial.unittest import TestCase
-from twisted.test.proto_helpers import StringTransport
 
 import treq
 import rs

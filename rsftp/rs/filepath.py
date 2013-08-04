@@ -71,7 +71,6 @@ class RSFilePath(object):
         d = self._get()
         d.addCallback(self._handleResponse)
 
-        dummyd = defer.succeed(True)
         return d
 
     def isdir(self):

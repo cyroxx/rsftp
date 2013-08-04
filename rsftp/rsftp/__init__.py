@@ -1,14 +1,8 @@
-import os
 from StringIO import StringIO
 
-from twisted.cred import checkers
 from twisted.internet import defer
-from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell
+from twisted.protocols.ftp import FTPRealm, IFTPShell
 from twisted.protocols import basic, ftp
-from twisted.python.filepath import IFilePath, AbstractFilePath
-from twisted.python.compat import comparable
-
-import treq
 
 import rs
 from rs.filepath import NotFoundError, PermissionDeniedError
