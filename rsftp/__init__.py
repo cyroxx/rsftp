@@ -3,23 +3,25 @@ import os
 
 from twisted.cred import checkers
 from twisted.internet import defer
-from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell, FileNotFoundError, PermissionDeniedError, errnoToFailure
+from twisted.protocols.ftp import FTPShell, FTPRealm, IFTPShell
+from twisted.protocols import ftp
 from twisted.python.filepath import IFilePath, AbstractFilePath
 from twisted.python.compat import comparable
 
 import treq
 
 import rs
-from rs.filepath import NotFoundError
+from rs.filepath import NotFoundError, PermissionDeniedError
 
-BASE_URI = 'https://heahdk.net/storage/cyroxx/public/'
+#BASE_URI, ACCESS_TOKEN = 'https://heahdk.net/storage/cyroxx/public/', ''
+BASE_URI, ACCESS_TOKEN = 'https://storage.5apps.com/cyroxx/public/', '6fe3cc8cdcce54de41f24c8886d6d8b1'
 
 class MyFTPRealm(FTPRealm):
     def requestAvatar(self, avatarId, mind, *interfaces):
         for iface in interfaces:
             if iface is IFTPShell:
 #                if avatarId is checkers.ANONYMOUS:
-                avatar = MyFTPShell( rs.RSFilePath(BASE_URI) )
+                avatar = MyFTPShell( rs.RSFilePath(BASE_URI, ACCESS_TOKEN) )
 #                else:
                 #avatar = MyFTPShell(self.getHomeDirectory(avatarId))
                 return (IFTPShell, avatar,
@@ -51,8 +53,14 @@ class MyFTPShell(object):
             return filePath.ftp_list(keys)
         
         def ebNotFound(failure):
-            failure.trap(NotFoundError)
-            raise FileNotFoundError(path)
+            failure.trap(NotFoundError, PermissionDeniedError)
+            
+            if failure.check(NotFoundError):
+                raise ftp.FileNotFoundError(path)
+            elif failure.check(PermissionDeniedError):
+                raise ftp.PermissionDeniedError(path)
+            else:
+                return failure 
         
         d.addCallback(cbList)
         d.addErrback(ebNotFound)
@@ -68,7 +76,7 @@ class MyFTPShell(object):
 
         def ebPath(failure):
             print "[rsftp71] ", path
-            raise FileNotFoundError(path)
+            raise ftp.FileNotFoundError(path)
         
         d.addErrback(ebPath)
         
@@ -76,7 +84,7 @@ class MyFTPShell(object):
     
     def rename(self, fromPath, toPath):
         # Not really implemented yet, so deny
-        return defer.fail(PermissionDeniedError(fromPath))
+        return defer.fail(ftp.PermissionDeniedError(fromPath))
         
     def _path(self, path):
         root = self.filesystemRoot

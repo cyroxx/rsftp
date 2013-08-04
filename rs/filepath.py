@@ -6,12 +6,16 @@ from twisted.python.filepath import InsecurePath
 class NotFoundError(Exception):
     pass
 
+class PermissionDeniedError(Exception):
+    pass
+
 class RSFilePath(object):
     sep = '/'.encode("ascii")
     childinfo = None
     
-    def __init__(self, path):
+    def __init__(self, path, access_token=''):
         self.path = path
+        self.access_token = access_token
         
     def child(self, name):
         """
@@ -137,7 +141,7 @@ class RSFilePath(object):
         @rtype: L{bool}
         """
         print "exists called: ", self.path
-        d = treq.get(self.path)
+        d = self._get()
         d.addCallback(self._handleResponse)
         
         dummyd = defer.succeed(True)
@@ -250,9 +254,15 @@ class RSFilePath(object):
         
         return d
     
+    def clonePath(self, path):
+        return RSFilePath(path, self.access_token)
+    
     def _list(self):
-        d = treq.get(self.path)
-        d.addCallback(self._handleResponse)
+        def gotResponse(response):
+            return self._handleResponse(response, self.path)
+        
+        d = self._get()
+        d.addCallback(gotResponse)
         d.addCallback(treq.json_content)
         
         return d
@@ -277,11 +287,23 @@ class RSFilePath(object):
         d.addCallback(gotListing)
         
         return d
+    
+    def _get(self):
+        headers = None
+        if self.access_token:
+            headers = {'Authorization': 'Bearer ' + self.access_token}
+
+        d = treq.get(self.path, headers=headers)
+        
+        return d
        
     def _handleResponse(self, response, uri=''):
         status = response.code
         m = getattr(self, '_handleResponse_'+str(status), self._handleResponseDefault)
         return m(response, uri)
+    
+    def _handleResponse_403(self, response, uri):
+        raise PermissionDeniedError, uri
     
     def _handleResponse_404(self, response, uri):
         raise NotFoundError, uri
@@ -291,5 +313,3 @@ class RSFilePath(object):
     
     def __str__(self):
         return self.path
-    
-RSFilePath.clonePath = RSFilePath
