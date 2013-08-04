@@ -45,15 +45,15 @@ class FakeResponse(object):
         protocol.connectionLost(reason)
         
 
-def mock_get(uri):
+def mock_get(uri, **kwargs):
     response = FakeResponse(list_response)
     return defer.succeed(response)
 
-def fakeListResponseNonNumeric(uri):
+def fakeListResponseNonNumeric(uri, **kwargs):
     response = FakeResponse(list_response_non_numeric)
     return defer.succeed(response)
 
-def fakeGet404(uri):
+def fakeGet404(uri, **kwargs):
     response = FakeResponse('')
     
     response.code = 404
@@ -106,11 +106,12 @@ class RSFilePathTestCase(TestCase):
     def test_listNonNumericVersionNumber(self):
         self.patch(treq, 'get', fakeListResponseNonNumeric)
         
-        keys = ('size', 'directory', 'permissions', 'hardlinks', 'modified', 'owner', 'group')
+        keys = ('modified',)
         d = self.test.ftp_list(keys)
         
         def cbList(results):
-            print results[0][1][4]
+            self.assertEqual(results[0][1][0], 0)   # results[0] = ('pictures/', (0,))
+            self.assertEqual(results[1][1][0], 0)   # results[1] = ('test.txt', (0,))
             
         
         d.addCallback(cbList)
