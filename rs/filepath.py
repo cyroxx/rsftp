@@ -248,7 +248,6 @@ class RSFilePath(object):
             
             return results
         
-        print '[fp211] ', self.path
         d = self._list()
         d.addCallback(parse_results)
         
