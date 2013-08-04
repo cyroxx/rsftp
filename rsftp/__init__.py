@@ -1,5 +1,5 @@
-import operator
 import os
+from StringIO import StringIO
 
 from twisted.cred import checkers
 from twisted.internet import defer
@@ -12,10 +12,8 @@ import treq
 
 import rs
 from rs.filepath import NotFoundError, PermissionDeniedError
-from StringIO import StringIO
 
-#BASE_URI, ACCESS_TOKEN = 'https://heahdk.net/storage/cyroxx/public/', ''
-BASE_URI, ACCESS_TOKEN = 'https://storage.5apps.com/cyroxx/public/', '6fe3cc8cdcce54de41f24c8886d6d8b1'
+from settings import BASE_URI, ACCESS_TOKEN
 
 
 class RSFTPRealm(FTPRealm):

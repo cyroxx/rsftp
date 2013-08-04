@@ -1,3 +1,4 @@
 *.pyc
+local_settings.py
 pass.dat
 _trial_temp
