@@ -62,19 +62,6 @@ def fakeGet404(uri, **kwargs):
     return defer.succeed(response)
     
 
-class RSClientTestCase(TestCase):
-    def setUp(self):
-        self.test = rs.RSClient()
-        self.patch(treq, 'get', mock_get)
-    
-    def tearDown(self):
-        pass
-    
-    def test_client(self):
-        #return defer.succeed(None)
-        
-        return self.test.list('/')
-
 class RSFilePathTestCase(TestCase):
     def setUp(self):
         self.test = rs.RSFilePath('https://example.com/public/')
