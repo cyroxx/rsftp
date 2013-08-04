@@ -110,11 +110,11 @@ class RSFilePath(object):
             results = []
             childinfo = {}
             for key, value in json.iteritems():
-                is_directory = key.endswith('/')
-                current_version = value
+                info = self.__extractChildInfo(key, value, childinfo)
+                childinfo, is_directory, current_version = info
 
                 # try to use <current_version> info as the modified timestamp
-                if isinstance(current_version, ( int, long )):
+                if isinstance(current_version, (int, long)):
                     modified = current_version / 1000
                 else:
                     modified = 0
@@ -130,9 +130,6 @@ class RSFilePath(object):
 
                 meta = [md[k] for k in keys]
                 results.append((key, meta))
-
-                normkey = key[:-1] if is_directory else key
-                childinfo[normkey] = {'is_directory': is_directory, 'current_version': current_version}
 
             self.childinfo = childinfo
 
@@ -162,11 +159,7 @@ class RSFilePath(object):
             childinfo = {}
 
             for key, value in json.iteritems():
-                is_directory = key.endswith('/')
-                current_version = value
-
-                normkey = key[:-1] if is_directory else key
-                childinfo[normkey] = {'is_directory': is_directory, 'current_version': current_version}
+                childinfo, _, _ = self.__extractChildInfo(key, value, childinfo)
 
             self.childinfo = childinfo
 
@@ -199,6 +192,17 @@ class RSFilePath(object):
 
     def _handleResponseDefault(self, response, uri):
         return response
+
+    def __extractChildInfo(self, key, value, childinfo):
+        is_directory = key.endswith(self.sep)
+        current_version = value
+
+        normkey = key[:-1] if is_directory else key
+        childinfo[normkey] = {
+                              'is_directory': is_directory,
+                              'current_version': current_version}
+
+        return childinfo, is_directory, current_version
 
     def __str__(self):
         return self.path
