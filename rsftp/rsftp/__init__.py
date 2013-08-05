@@ -1,5 +1,3 @@
-from StringIO import StringIO
-
 from twisted.internet import defer
 from twisted.protocols.ftp import FTPRealm, IFTPShell
 from twisted.protocols import basic, ftp
@@ -96,11 +94,29 @@ class RSFTPShell(object):
         return d
 
     def openForReading(self, path):
-        # 1. check whether the path exists
-        # 2. check whether we may open it (should be the case in RS)
-        # 3. open it
-        f = StringIO('Hello World!')
-        return defer.succeed(_RSFileReader(f))
+        """
+        Open C{path} for reading.
+
+        @param path: The path, as a list of segments, to open.
+        @type path: C{list} of C{unicode}
+        @return: A L{Deferred} is returned that will fire with an object
+            implementing L{IReadFile} if the file is successfully opened.  If
+            C{path} is a directory, or if an exception is raised while trying
+            to open the file, the L{Deferred} will fire with an error.
+        """
+        def cbFileOpened(f):
+            return _RSFileReader(f)
+
+        def cbPathConstructed(path):
+            d2 = path.open()
+            d2.addCallback(cbFileOpened)
+
+            return d2
+
+        d1 = self._path(path)
+        d1.addCallback(cbPathConstructed)
+
+        return d1
 
     def rename(self, fromPath, toPath):
         # Not really implemented yet, so deny

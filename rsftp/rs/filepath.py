@@ -1,3 +1,5 @@
+from StringIO import StringIO
+
 from twisted.internet import defer
 
 import treq
@@ -70,6 +72,25 @@ class RSFilePath(object):
         print "exists called: ", self.path
         d = self._get()
         d.addCallback(self._handleResponse)
+
+        return d
+
+    def open(self):
+        """
+        Open this file for reading.
+
+        @rtype: L{Deferred} which will fire with L{StringIO}
+        """
+        def cbGotResponse(response):
+            return self._handleResponse(response, self.path)
+
+        def cbGotContent(content):
+            return StringIO(content)
+
+        d = self._get()
+        d.addCallback(cbGotResponse)
+        d.addCallback(treq.content)
+        d.addCallback(cbGotContent)
 
         return d
 
