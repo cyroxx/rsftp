@@ -1,3 +1,4 @@
+from posixpath import normpath
 from StringIO import StringIO
 
 from twisted.internet import defer
@@ -22,43 +23,36 @@ class RSFilePath(object):
         self.path = path
         self.access_token = access_token
 
-    def child(self, name):
+    def child(self, path):
         """
-        Obtain a direct child of this file path.  The child may or may not
+        Obtain a direct child of this file path. The child may or may not
         exist.
 
         @param name: the name of a child of this path. C{name} must be a direct
             child of this path and may not contain a path separator.
-        @return: the child of this path with the given C{name}.
-        @raise InsecurePath: if C{name} describes a file path that is not a
-            direct child of this file path.
+        @return: a C{Deferred} that fires the child of this path with the
+            given C{name}. If C{name} describes a file path that is not a
+            direct child of this file path, the C{Deferred} will fire with
+            an C{InsecurePath} error.
         """
-        #print "child called: ", self.path
-        #print name
+        norm = normpath(path)
+        if self.sep in norm:
+            error = InsecurePath("%r contains one or more directory separators" % (path,))
+            return defer.fail(error)
 
-        sep = self.sep
-        childinfo = self.childinfo
+        def cbGotExistingChild(pathObj):
+            if pathObj:
+                return pathObj
 
-        def cbGetChildInfo(childinfo):
-            child = childinfo.get(name)
-            if child:
+            newpath = ''.join([self.path, path])
+            if not newpath.startswith(self.path):
+                raise InsecurePath("%r is not a child of %s" % (newpath, self.path))
 
-                # XXX maybe DRY refactor the path construction a bit more
-                if child['is_directory']:
-                    newpath = ''.join([self.path, name, sep])
-                else:
-                    newpath = ''.join([self.path, name])
+            return self.clonePath(newpath)
 
-                return defer.succeed(self.clonePath(newpath))
-            else:
-                return defer.fail(InsecurePath("%r is not a child of %s" % (name, self.path)))
+        d = self._getExistingChild(norm)
+        d.addCallback(cbGotExistingChild)
 
-        if childinfo:
-            d = defer.succeed(childinfo)
-        else:
-            d = self._getChildInfo()
-
-        d.addCallback(cbGetChildInfo)
         return d
 
     def exists(self):
@@ -175,6 +169,9 @@ class RSFilePath(object):
 
     def _getChildInfo(self):
 
+        if self.childinfo:
+            return defer.succeed(self.childinfo)
+
         def gotListing(json):
             childinfo = {}
 
@@ -187,6 +184,32 @@ class RSFilePath(object):
 
         d = self._list()
         d.addCallback(gotListing)
+
+        return d
+
+    def _getExistingChild(self, path):
+        """
+        Obtain a direct child of this file path that already exists.
+
+        @return: a C{Deferred} that fires the path of the child if it exists,
+            otherwise C{None}.
+        """
+        def cbGotChildInfo(childinfo):
+            child = childinfo.get(path)
+
+            if child:
+                # XXX maybe DRY refactor the path construction a bit more
+                if child['is_directory']:
+                    newpath = ''.join([self.path, path, self.sep])
+                else:
+                    newpath = ''.join([self.path, path])
+
+                return defer.succeed(self.clonePath(newpath))
+            else:
+                return defer.succeed(None)
+
+        d = self._getChildInfo()
+        d.addCallback(cbGotChildInfo)
 
         return d
 
