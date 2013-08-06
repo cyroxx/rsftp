@@ -90,6 +90,19 @@ class RSFilePath(object):
 
         return d
 
+    def remove(self):
+        headers = None
+        if self.access_token:
+            headers = {'Authorization': 'Bearer ' + self.access_token}
+
+        def cbGotResponse(response):
+            return self._handleResponse(response, self.path)
+
+        d = treq.delete(self.path, headers=headers)
+        d.addCallback(cbGotResponse)
+
+        return d
+
     def isdir(self):
         """
         Check if this file path refers to a directory.

@@ -118,6 +118,15 @@ class RSFTPShell(object):
 
         return d1
 
+    def removeFile(self, path):
+        def cbPathConstructed(path):
+            path.remove()
+
+        d = self._path(path)
+        d.addCallback(cbPathConstructed)
+
+        return d
+
     def rename(self, fromPath, toPath):
         # Not really implemented yet, so deny
         return defer.fail(ftp.PermissionDeniedError(fromPath))
