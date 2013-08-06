@@ -1,3 +1,5 @@
+# -*- test-case-name: rsftp.test.test_filepath -*-
+
 from posixpath import normpath
 from StringIO import StringIO
 
