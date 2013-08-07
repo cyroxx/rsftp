@@ -191,6 +191,9 @@ class RSFilePath(object):
             childinfo = {}
 
             for key, value in json.iteritems():
+                # TODO: is this the right way to do enforce type str? (see #5)
+                key = key.encode('ascii')
+
                 childinfo, _, _ = self.__extractChildInfo(key, value, childinfo)
 
             self.childinfo = childinfo
