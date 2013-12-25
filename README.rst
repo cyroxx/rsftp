@@ -2,7 +2,7 @@
 rsftp
 ============
 
-.. image:: https://travis-ci.org/cyroxx/rsftp.png?branch=master   :target: https://travis-ci.org/cyroxx/rsftp
+|build|_
 
 ``rsftp`` is a work-in-progress FTP adapter for `remoteStorage <http://remotestorage.io>`_ backends.
 
@@ -56,3 +56,6 @@ Security
 This application is currently not suited for a public-facing installation as it grants full access to anonymous users. In future versions, anonymous access shall be dropped in favor of proper user management. Until then, you should run and test the application locally.
 
 Apart from that, I'm in no way a security expert or specialist, so I recommend to pentest or validate the code before storing any sensitive data with it.
+
+.. |build| image:: https://travis-ci.org/cyroxx/rsftp.png?branch=master
+.. _build: https://travis-ci.org/cyroxx/rsftp
