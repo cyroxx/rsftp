@@ -2,6 +2,8 @@
 rsftp
 ============
 
+.. image:: https://travis-ci.org/cyroxx/rsftp.png?branch=master   :target: https://travis-ci.org/cyroxx/rsftp
+
 ``rsftp`` is a work-in-progress FTP adapter for `remoteStorage <http://remotestorage.io>`_ backends.
 
 The aim is to make it easy to up- and download your files to/from a remoteStorage provider using the well-known File Transfer Protocol.
