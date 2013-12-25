@@ -46,7 +46,11 @@ class RSFilePath(object):
             if pathObj:
                 return pathObj
 
-            newpath = ''.join([self.path, path])
+            if self.path.endswith(self.sep):
+                newpath = ''.join([self.path, path])
+            else:
+                newpath = self.sep.join([self.path, path])
+
             if not newpath.startswith(self.path):
                 raise InsecurePath("%r is not a child of %s" % (newpath, self.path))
 
